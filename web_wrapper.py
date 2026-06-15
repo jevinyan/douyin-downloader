@@ -9,32 +9,33 @@ app = Flask(__name__)
 def run_downloader(url):
     try:
         print(f"DEBUG: 开始执行任务，URL: {url}", flush=True)
-        print(f"DEBUG: 当前工作目录: {os.getcwd()}", flush=True)
-        print(f"DEBUG: 检查目录下文件: {os.listdir('.')}", flush=True)
-
-        # 使用 Popen 实时获取输出，而不是等待执行完毕
+        
+        # 实时启动子进程
+        # bufsize=1 表示行缓冲，这样 print 内容会立刻显示在日志里
         process = subprocess.Popen(
-            ["python", "run.py", "--url", url],
+            ["python", "-u", "run.py", "--url", url], # -u 参数让 Python 不缓存输出
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
+            stderr=subprocess.STDOUT, # 将 stderr 合并到 stdout
+            text=True,
+            bufsize=1
         )
         
-        print("DEBUG: 子进程已启动，正在等待输出...", flush=True)
+        print("DEBUG: 子进程已启动，正在读取实时输出...", flush=True)
         
-        # 实时读取输出
-        stdout, stderr = process.communicate(timeout=300)
+        # 实时逐行读取输出
+        for line in iter(process.stdout.readline, ''):
+            print(f"RUN.PY: {line.strip()}", flush=True)
+            
+        process.stdout.close()
+        process.wait()
         
         if process.returncode == 0:
-            print(f"任务成功: {stdout}", flush=True)
+            print("任务完成: 子进程顺利结束。", flush=True)
         else:
             print(f"--- 脚本执行失败，返回码: {process.returncode} ---", flush=True)
-            print(f"错误信息: {stderr}", flush=True)
             
-    except subprocess.TimeoutExpired:
-        print("DEBUG: 任务超时！", flush=True)
     except Exception as e:
-        print(f"DEBUG: 发生未捕获异常: {str(e)}", flush=True)
+        print(f"DEBUG: 执行脚本时发生异常: {str(e)}", flush=True)
         
 @app.route('/')
 def home():

@@ -30,7 +30,7 @@ def run_downloader(url):
 def home():
     return "Douyin Downloader API is running."
 
-@app.route('/download')
+@app.route('/download', methods=['GET'])
 def download():
     url = request.args.get('url')
     if not url:

@@ -8,19 +8,27 @@ app = Flask(__name__)
 # 后台运行下载任务
 def run_downloader(url):
     try:
-        print(f"正在后台处理下载任务: {url}")
-        # 这里调用你的 run.py。请确保 run.py 接收 url 参数
-        # 如果你的 run.py 逻辑在 main() 函数中，请根据实际情况修改
+        print(f"正在后台启动任务，URL: {url}")
+        
+        # 增加 check=True，这样如果脚本运行出错，它会抛出异常
+        # 增加 stdout=subprocess.PIPE, stderr=subprocess.PIPE 来捕获详细日志
         result = subprocess.run(
             ["python", "run.py", "--url", url], 
             capture_output=True, 
-            text=True
+            text=True,
+            check=True 
         )
-        print(f"下载脚本输出: {result.stdout}")
-        if result.stderr:
-            print(f"下载脚本错误: {result.stderr}")
+        print(f"任务成功: {result.stdout}")
+        
+    except subprocess.CalledProcessError as e:
+        # 如果脚本退出码不为0，这里会捕获到详细的错误信息
+        print(f"--- 脚本执行失败 ---")
+        print(f"错误代码: {e.returncode}")
+        print(f"标准错误输出 (stderr): {e.stderr}")
+        print(f"标准输出 (stdout): {e.stdout}")
+        
     except Exception as e:
-        print(f"任务执行异常: {e}")
+        print(f"任务执行时发生异常: {str(e)}")
 
 @app.route('/')
 def home():

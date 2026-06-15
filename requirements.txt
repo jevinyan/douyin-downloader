@@ -1,3 +1,5 @@
+flask
+gunicorn
 aiohttp>=3.9.0
 aiofiles>=23.2.1
 aiosqlite>=0.19.0
@@ -8,4 +10,4 @@ gmssl>=3.2.2
 # Bundled ffmpeg static binary for audio extraction before
 # transcription upload. Pinned exact for reproducible sidecar builds.
 imageio-ffmpeg==0.6.0
-gunicorn
+

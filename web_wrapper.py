@@ -5,60 +5,41 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# 后台运行下载任务
 def run_downloader(url):
+    print(f">>> 开始执行后台任务, URL: {url}", flush=True)
     try:
-        # 新增的调试代码
-        config_exists = os.path.exists("config.yml")
-        print(f"DEBUG: 检查 config.yml 是否存在: {config_exists}", flush=True)
-        if not config_exists:
-            # 如果不存在，强制打印当前所有文件，看看它们到底在哪
-            print(f"DEBUG: 目录内容列表: {os.listdir(os.getcwd())}", flush=True)
-        
-        # 实时启动子进程
-        # bufsize=1 表示行缓冲，这样 print 内容会立刻显示在日志里
+        # 使用绝对路径执行，并强制指定工作目录为 /app
+        cmd = ["python", "-u", "run.py", "--url", url]
         process = subprocess.Popen(
-            ["python", "-u", "run.py", "--url", url], # -u 参数让 Python 不缓存输出
+            cmd,
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT, # 将 stderr 合并到 stdout
+            stderr=subprocess.STDOUT,
             text=True,
-            bufsize=1
+            bufsize=1,
+            cwd="/app" 
         )
         
-        print("DEBUG: 子进程已启动，正在读取实时输出...", flush=True)
-        
-        # 实时逐行读取输出
         for line in iter(process.stdout.readline, ''):
             print(f"RUN.PY: {line.strip()}", flush=True)
             
-        process.stdout.close()
         process.wait()
-        
         if process.returncode == 0:
-            print("任务完成: 子进程顺利结束。", flush=True)
+            print(">>> 任务执行完毕。", flush=True)
         else:
-            print(f"--- 脚本执行失败，返回码: {process.returncode} ---", flush=True)
-            
+            print(f">>> 脚本异常退出，代码: {process.returncode}", flush=True)
     except Exception as e:
-        print(f"DEBUG: 执行脚本时发生异常: {str(e)}", flush=True)
-        
-@app.route('/')
-def home():
-    return "Douyin Downloader API is running."
+        print(f">>> 执行异常: {str(e)}", flush=True)
 
 @app.route('/download')
 def download():
-    # 这一行是新增的，用于在日志中留下“指纹”
-    print(f">>> 收到下载请求，参数 url: {request.args.get('url')}", flush=True)
-    
     url = request.args.get('url')
     if not url:
         return jsonify({"error": "缺少 url 参数"}), 400
     
-    # 异步开启下载线程
     thread = threading.Thread(target=run_downloader, args=(url,))
     thread.daemon = True
     thread.start()
-    
-    return jsonify({"status": "accepted", "message": "下载任务已提交", "url": url}), 202
+    return jsonify({"status": "accepted", "message": "下载任务已提交"}), 202
 
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=8080)

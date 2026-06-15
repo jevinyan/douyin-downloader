@@ -8,7 +8,12 @@ app = Flask(__name__)
 # 后台运行下载任务
 def run_downloader(url):
     try:
-        print(f"DEBUG: 开始执行任务，URL: {url}", flush=True)
+        # 新增的调试代码
+        config_exists = os.path.exists("config.yml")
+        print(f"DEBUG: 检查 config.yml 是否存在: {config_exists}", flush=True)
+        if not config_exists:
+            # 如果不存在，强制打印当前所有文件，看看它们到底在哪
+            print(f"DEBUG: 目录内容列表: {os.listdir(os.getcwd())}", flush=True)
         
         # 实时启动子进程
         # bufsize=1 表示行缓冲，这样 print 内容会立刻显示在日志里

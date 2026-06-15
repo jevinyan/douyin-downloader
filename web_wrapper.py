@@ -8,28 +8,34 @@ app = Flask(__name__)
 # 后台运行下载任务
 def run_downloader(url):
     try:
-        print(f"正在后台启动任务，URL: {url}")
-        
-        # 增加 check=True，这样如果脚本运行出错，它会抛出异常
-        # 增加 stdout=subprocess.PIPE, stderr=subprocess.PIPE 来捕获详细日志
-        result = subprocess.run(
-            ["python", "run.py", "--url", url], 
-            capture_output=True, 
-            text=True,
-            check=True 
-        )
-        print(f"任务成功: {result.stdout}")
-        
-    except subprocess.CalledProcessError as e:
-        # 如果脚本退出码不为0，这里会捕获到详细的错误信息
-        print(f"--- 脚本执行失败 ---")
-        print(f"错误代码: {e.returncode}")
-        print(f"标准错误输出 (stderr): {e.stderr}")
-        print(f"标准输出 (stdout): {e.stdout}")
-        
-    except Exception as e:
-        print(f"任务执行时发生异常: {str(e)}")
+        print(f"DEBUG: 开始执行任务，URL: {url}", flush=True)
+        print(f"DEBUG: 当前工作目录: {os.getcwd()}", flush=True)
+        print(f"DEBUG: 检查目录下文件: {os.listdir('.')}", flush=True)
 
+        # 使用 Popen 实时获取输出，而不是等待执行完毕
+        process = subprocess.Popen(
+            ["python", "run.py", "--url", url],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        
+        print("DEBUG: 子进程已启动，正在等待输出...", flush=True)
+        
+        # 实时读取输出
+        stdout, stderr = process.communicate(timeout=300)
+        
+        if process.returncode == 0:
+            print(f"任务成功: {stdout}", flush=True)
+        else:
+            print(f"--- 脚本执行失败，返回码: {process.returncode} ---", flush=True)
+            print(f"错误信息: {stderr}", flush=True)
+            
+    except subprocess.TimeoutExpired:
+        print("DEBUG: 任务超时！", flush=True)
+    except Exception as e:
+        print(f"DEBUG: 发生未捕获异常: {str(e)}", flush=True)
+        
 @app.route('/')
 def home():
     return "Douyin Downloader API is running."

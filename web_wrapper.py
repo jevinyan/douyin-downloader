@@ -8,7 +8,10 @@ app = Flask(__name__)
 def run_downloader(url):
     print(f">>> 开始执行后台任务, URL: {url}", flush=True)
     try:
-        # 使用绝对路径执行，并强制指定工作目录为 /app
+        # 获取当前环境变量并添加 CONFIG_PATH
+        my_env = os.environ.copy()
+        my_env["CONFIG_PATH"] = "/app/config.yml" # 强行指定配置路径
+        
         cmd = ["python", "-u", "run.py", "--url", url]
         process = subprocess.Popen(
             cmd,
@@ -16,19 +19,14 @@ def run_downloader(url):
             stderr=subprocess.STDOUT,
             text=True,
             bufsize=1,
-            cwd="/app" 
+            cwd="/app",
+            env=my_env  # 注入环境变量
         )
         
         for line in iter(process.stdout.readline, ''):
             print(f"RUN.PY: {line.strip()}", flush=True)
             
         process.wait()
-        if process.returncode == 0:
-            print(">>> 任务执行完毕。", flush=True)
-        else:
-            print(f">>> 脚本异常退出，代码: {process.returncode}", flush=True)
-    except Exception as e:
-        print(f">>> 执行异常: {str(e)}", flush=True)
 
 @app.route('/download')
 def download():

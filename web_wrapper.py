@@ -36,6 +36,9 @@ def home():
 
 @app.route('/download')
 def download():
+    # 这一行是新增的，用于在日志中留下“指纹”
+    print(f">>> 收到下载请求，参数 url: {request.args.get('url')}", flush=True)
+    
     url = request.args.get('url')
     if not url:
         return jsonify({"error": "缺少 url 参数"}), 400

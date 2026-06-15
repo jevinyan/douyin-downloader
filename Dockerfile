@@ -10,6 +10,9 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn flask
 # 拷贝你的代码
 COPY . .
 
+COPY config.example.yml /app/config.yml
+RUN chmod 644 /app/config.yml
+
 # 暴露端口
 EXPOSE 8080
 

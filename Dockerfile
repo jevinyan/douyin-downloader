@@ -1,25 +1,20 @@
-FROM python:3.12-slim
+FROM python:3.10-slim
+
+# 1. 设置非交互式安装
+ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /app
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc && \
-    rm -rf /var/lib/apt/lists/*
+# 2. 安装系统依赖 (如有)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
+# 3. 升级 pip 并安装项目依赖
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt --root-user-action=ignore
 
 COPY . .
 
-RUN mkdir -p /app/Downloaded
-
-VOLUME ["/app/Downloaded", "/app/config.yml"]
-
-ENTRYPOINT ["python", "run.py"]
-CMD ["-c", "config.yml"]
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    [你的依赖包名称] \
-    && rm -rf /var/lib/apt/lists/*
+CMD ["python", "main.py"]

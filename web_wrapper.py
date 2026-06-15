@@ -39,7 +39,3 @@ def download():
     
     return jsonify({"status": "accepted", "message": "下载任务已提交", "url": url}), 202
 
-if __name__ == "__main__":
-    # Back4app 容器必须绑定 0.0.0.0 和环境变量中的 PORT
-    port = int(os.getenv("PORT", 8080))
-    app.run(host='0.0.0.0', port=port)

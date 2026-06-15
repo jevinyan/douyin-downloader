@@ -17,3 +17,9 @@ VOLUME ["/app/Downloaded", "/app/config.yml"]
 
 ENTRYPOINT ["python", "run.py"]
 CMD ["-c", "config.yml"]
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    [你的依赖包名称] \
+    && rm -rf /var/lib/apt/lists/*

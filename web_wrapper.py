@@ -1,26 +1,45 @@
 import os
 import threading
-from flask import Flask
 import subprocess
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# 定义后台运行下载任务的函数
-def start_downloader():
-    # 这里根据你的项目实际情况修改启动命令，例如：
-    # subprocess.run(["python", "run.py", "-c", "config.yml"])
-    print("下载任务已在后台启动...")
+# 后台运行下载任务
+def run_downloader(url):
+    try:
+        print(f"正在后台处理下载任务: {url}")
+        # 这里调用你的 run.py。请确保 run.py 接收 url 参数
+        # 如果你的 run.py 逻辑在 main() 函数中，请根据实际情况修改
+        result = subprocess.run(
+            ["python", "run.py", "--url", url], 
+            capture_output=True, 
+            text=True
+        )
+        print(f"下载脚本输出: {result.stdout}")
+        if result.stderr:
+            print(f"下载脚本错误: {result.stderr}")
+    except Exception as e:
+        print(f"任务执行异常: {e}")
 
 @app.route('/')
 def home():
-    return "Downloader is running and healthy."
+    return "Douyin Downloader API is running."
 
-if __name__ == "__main__":
-    # 启动后台线程运行下载逻辑
-    thread = threading.Thread(target=start_downloader)
+@app.route('/download')
+def download():
+    url = request.args.get('url')
+    if not url:
+        return jsonify({"error": "缺少 url 参数"}), 400
+    
+    # 异步开启下载线程
+    thread = threading.Thread(target=run_downloader, args=(url,))
     thread.daemon = True
     thread.start()
     
-    # 启动 Web 服务占用端口，满足 Back4app 要求
+    return jsonify({"status": "accepted", "message": "下载任务已提交", "url": url}), 202
+
+if __name__ == "__main__":
+    # Back4app 容器必须绑定 0.0.0.0 和环境变量中的 PORT
     port = int(os.getenv("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
